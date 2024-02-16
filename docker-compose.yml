@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  wallet-mongodb:
+    image: mongo:6.0
+    container_name: mongodb-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+    ports:
+      - "$MONGODB_PORT:$MONGODB_PORT"
+    volumes:
+      - dbdata:/data/db
+  wallet-redis:
+    image: redis:latest
+    container_name: cache-server
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "$REDIS_PORT:6379"
+    expose:
+      - "$REDIS_PORT"
+    volumes:
+      - dbdata:/data/rdb
+  wallet-mysql:
+    image: mysql:latest
+    container_name: mysql-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "$DB_PORT:3306"
+    expose:
+      - "$DB_PORT"
+    volumes:
+      - ./docker/initialize:/docker-entrypoint-initdb.d
+      - ./docker/config/my.cnf:/etc/mysql/conf.d/my.cnf
+      - dbdata:/data/rdb
+volumes:
+  dbdata:
